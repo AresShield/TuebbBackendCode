@@ -90,7 +90,7 @@ def adv_venue_profile_view(request, pk=None, format=None):
             adv_profile_serializer.save()
             return Response(adv_profile_serializer.data, status.HTTP_202_ACCEPTED)
         else:
-            return Response(status=status.HTTP_400_BAD_REQUEST)
+            return Response({"Error": "validation error"},status=status.HTTP_400_BAD_REQUEST)
     elif request.method == "GET":
         if pk:
             adv_profile = AdvancedVenueProfile.objects.get(pk=pk)

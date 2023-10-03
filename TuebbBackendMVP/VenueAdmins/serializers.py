@@ -51,7 +51,7 @@ class MenuSerializer(serializers.ModelSerializer):
 class PhotoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Photo
-        fields = ["file"]
+        fields = ["id", "file"]
 
 # serializer for full venue profiles
 # note: only one image can be uploaded at a time
@@ -60,7 +60,7 @@ class AdvancedProfileVenueSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = AdvancedVenueProfile
-        fields = ["address", "opening_hours", "description", "contact", "images", "entry_fee"]
+        fields = ["id", "address", "opening_hours", "description", "contact", "images", "entry_fee"]
 
     def validate(self, attrs):
         if self.context["request"].data.get("delete_photos"):
