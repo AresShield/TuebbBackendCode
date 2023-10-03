@@ -1,16 +1,25 @@
 from django.contrib.auth import get_user_model
-from .serializers import MenuItemSerializer, MenuSerializer
+from .serializers import MenuItemSerializer, MenuSerializer, AdvancedProfileVenueSerializer
 from rest_framework import generics
 from rest_framework import permissions
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework import status
-from .models import Menu, MenuItem
-from .permissions import IsCreatorOrReadOnlyMenu, IsCreatorOrReadOnlyMenuItem
+from .models import Menu, MenuItem, AdvancedVenueProfile
+from .permissions import IsCreatorOrReadOnlyMenu, IsOwnerOrReadOnlyAdvUserProfile,IsCreatorOrReadOnlyMenuItem
 from userAuth.models import VenueProfile
 
 
-
+"""
+desc: create and change menu items
+requirements: auth credentials
+for create: use url without primary key parameter and use POST
+input: {name:str, description:str, price:float}
+output: 201 if valid, 400 if not
+for change: use primary key of object as url parameter and use PUT
+input: {name, description, price}
+output: 200 if valid, 400 if not
+"""
 @api_view(['POST', "PUT"])
 @permission_classes([IsCreatorOrReadOnlyMenuItem, permissions.IsAuthenticated])
 def menu_item_view(request, pk=None, format=None):
@@ -34,6 +43,17 @@ def menu_item_view(request, pk=None, format=None):
 
 
 
+"""
+desc: delete menu items and retrieve a menu
+requirements: auth credentials
+for delete: use url without primary key parameter and use PATCH
+input: {delete_menu_items:list of primary ids}
+output: 202 if valid, 400 if not
+for retrieve: use primary key of object as url parameter 
+or none if you want to get your own menu and use GET
+input: -
+output: 200 if valid, 400 if not, returns list of items on menu
+"""
 @api_view(['PATCH', "GET"])
 @permission_classes([IsCreatorOrReadOnlyMenu, permissions.IsAuthenticated])
 def menu_view(request, pk=None, format=None):
@@ -56,3 +76,28 @@ def menu_view(request, pk=None, format=None):
         return Response(menu_serializer.data, status=status.HTTP_200_OK)
     return Response({"supported methods":"PATCH,GET"}, status=status.HTTP_400_BAD_REQUEST)
 
+
+# settings view
+@api_view(['PUT', "GET"])
+@permission_classes([IsOwnerOrReadOnlyAdvUserProfile, permissions.IsAuthenticated])
+def adv_venue_profile_view(request, pk=None, format=None):
+    if request.method == "PUT":
+        if len(VenueProfile.objects.filter(govern_user=request.user)) == 0:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+        adv_profile = AdvancedVenueProfile.objects.get(venue_profile=VenueProfile.objects.get(govern_user=request.user))
+        adv_profile_serializer = AdvancedProfileVenueSerializer(adv_profile, data=request.data, context={'request': request})
+        if adv_profile_serializer.is_valid():
+            adv_profile_serializer.save()
+            return Response(adv_profile_serializer.data, status.HTTP_202_ACCEPTED)
+        else:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+    elif request.method == "GET":
+        if pk:
+            adv_profile = AdvancedVenueProfile.objects.get(pk=pk)
+        elif pk==None and len(VenueProfile.objects.filter(govern_user=request.user))==1:
+            adv_profile = AdvancedVenueProfile.objects.get(venue_profile=VenueProfile.objects.get(govern_user=request.user))
+        else:
+            return Response({"Error": "No Venue found with your criteria"},status=status.HTTP_400_BAD_REQUEST)
+        adv_profile_serializer = AdvancedProfileVenueSerializer(adv_profile)
+        return Response(adv_profile_serializer.data, status=status.HTTP_200_OK)
+    return Response({"supported methods":"PUT,GET"}, status=status.HTTP_400_BAD_REQUEST)

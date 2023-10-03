@@ -1,11 +1,13 @@
 from django.db import models
 from userAuth.models import VenueProfile
+import os
+from django.dispatch import receiver
 
 
 # represent items on the menu
 class MenuItem(models.Model):
     name = models.CharField(max_length=50)
-    description = models.CharField(max_length=300)
+    description = models.CharField(max_length=300, blank=True, null=True)
     price = models.FloatField()
 
     def __str__(self):
@@ -25,19 +27,25 @@ class Menu(models.Model):
 
 # Venue profile settings
 class Photo(models.Model):
-    file = models.FileField(upload_to='uploads/')
+    file = models.ImageField(upload_to='uploads/')
 
-    def delete(self):
-        self.file.delete()
-        super().delete()
+@receiver(models.signals.post_delete, sender=Photo)
+def auto_delete_file_on_delete(sender, instance, **kwargs):
+    """
+    Deletes file from filesystem
+    when corresponding `MediaFile` object is deleted.
+    """
+    if instance.file:
+        if os.path.isfile(instance.file.path):
+            os.remove(instance.file.path)
 
 class AdvancedVenueProfile(models.Model):
     venue_profile = models.ForeignKey(VenueProfile, on_delete=models.CASCADE, related_name="advanced_profile")
-    address = models.CharField(max_length=200)
-    opening_hours = models.CharField(max_length=1000)
-    description = models.CharField(max_length=1000)
-    contact = models.CharField(max_length=200)
+    address = models.CharField(max_length=200, blank=True, null=True)
+    opening_hours = models.CharField(max_length=1000, blank=True, null=True)
+    description = models.CharField(max_length=1000, blank=True, null=True)
+    contact = models.CharField(max_length=200, blank=True, null=True)
     images = models.ManyToManyField(Photo, related_name="venue", blank=True)
-
+    entry_fee = models.FloatField(blank=True, null=True)
     def __str__(self):
         return f"Company profile of {self.venue_profile.company_name}"

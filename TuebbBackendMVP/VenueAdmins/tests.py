@@ -2,10 +2,12 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase
 from rest_framework.test import APIRequestFactory
 from rest_framework import status
-from .views import menu_item_view, menu_view
+from .views import menu_item_view, menu_view, adv_venue_profile_view
 from rest_framework.test import force_authenticate
-from .models import Menu, MenuItem
+from .models import Menu, MenuItem, AdvancedVenueProfile
 from userAuth.models import VenueProfile
+import tempfile
+from PIL import Image as ImageFile
 
 # Create your tests here.
 class MenuAndMenuItemTesting(TestCase):
@@ -22,7 +24,8 @@ class MenuAndMenuItemTesting(TestCase):
                                                  govern_user=self.user2)
         self.menu = Menu.objects.create(owner=self.venue)
         self.menu1 = Menu.objects.create(owner=self.venue1)
-
+        self.adv_profile1 = AdvancedVenueProfile.objects.create(venue_profile=self.venue)
+        self.adv_profile2 = AdvancedVenueProfile.objects.create(venue_profile=self.venue1)
 
     def test_adding_item(self):
         request = self.request_factory.post('/menu_item/', {"name": "TestDrink", "description":"15% alk, don't overdo it bro", "price": "15.432"}, format='json')
@@ -173,3 +176,109 @@ class MenuAndMenuItemTesting(TestCase):
         view = menu_view
         response = view(request)
         self.assertTrue(len(self.menu1.items.all())==0)
+
+
+class AdvancedVenueProfileTests(TestCase):
+    def setUp(self):
+        self.request_factory = APIRequestFactory()
+        self.user = get_user_model().objects.create_user(
+            email='javed@javed.com', password='my_secret')
+        self.user1 = get_user_model().objects.create_user(
+            email='bert@bert.com', password='my_secret')
+        self.user2 = get_user_model().objects.create_user(
+            email='anna@anna.com', password='my_secret')
+        self.venue = VenueProfile.objects.create(company_name="ExampleVenue", unique_code="12345", govern_user=self.user)
+        self.venue1 = VenueProfile.objects.create(company_name="ExampleVenue", unique_code="123456",
+                                                 govern_user=self.user2)
+        self.adv_profile = AdvancedVenueProfile.objects.create(venue_profile=self.venue, address="New York 2", opening_hours="Fri - Mon; 8pm - 6 am",
+                                                               description="Best night club in city", contact="examplevenue@gmail.com",
+                                                               entry_fee=15.2)
+        self.adv_profile1 = AdvancedVenueProfile.objects.create(venue_profile=self.venue1)
+
+    def test_retrieving_info_from_others(self):
+        request = self.request_factory.get(f'/adv_profile/{self.adv_profile.id}', format='json')
+        request.user = self.user1
+        response = adv_venue_profile_view(request, pk=self.adv_profile.id)
+        self.assertEqual(response.data.get("address"), "New York 2")
+        self.assertEqual(response.data.get("entry_fee"), 15.2)
+
+    def test_retrieving_info_from_own_venue(self):
+        request = self.request_factory.get(f'/adv_profile/', format='json')
+        request.user = self.user
+        response = adv_venue_profile_view(request)
+        self.assertEqual(response.data.get("address"), "New York 2")
+        self.assertEqual(response.data.get("entry_fee"), 15.2)
+
+    def test_updating_string_info(self):
+        request = self.request_factory.put(f'/adv_profile/', {"address": "New York 1", "opening_hours": "updated!",
+                                                              "description": "updated_desc", "contact": "updated contact",
+                                                              "entry_fee": 17.23}, format='json')
+        request.user = self.user
+        response = adv_venue_profile_view(request)
+        #print("message: "+str(response.data))
+        self.adv_profile = AdvancedVenueProfile.objects.get(venue_profile=self.venue)
+        self.assertEqual(self.adv_profile.address, "New York 1")
+        self.assertEqual(self.adv_profile.entry_fee, 17.23)
+
+    def test_updating_string_info_without_permission(self):
+        request = self.request_factory.put(f'/adv_profile/{self.adv_profile.id}', {"address": "New York 1", "opening_hours": "updated!",
+                                                              "description": "updated_desc", "contact": "updated contact",
+                                                              "entry_fee": 17.23}, format='json')
+        request.user = self.user2
+        response = adv_venue_profile_view(request, pk=self.adv_profile.id)
+        #print("message: "+str(response.data))
+        self.adv_profile = AdvancedVenueProfile.objects.get(venue_profile=self.venue)
+        self.assertEqual(self.adv_profile.address, "New York 2")
+
+    def test_upload_image(self):
+        image = ImageFile.new('RGBA', size=(100, 100), color=(155, 0, 0))
+        image_file = tempfile.NamedTemporaryFile(suffix='.png')
+        image.save(image_file, 'png')
+        #image_file.seek(0)
+
+        with open(image_file.name, 'rb') as image:
+            # Upload the image.
+            data = {
+                'upload_image': image, "address": "New York 1", "opening_hours": "updated!",
+                "description": "updated_desc", "contact": "updated contact",
+                "entry_fee": 17.23
+            }
+
+            request = self.request_factory.put('/adv_profile/', data, format='multipart')
+            request.user = self.user
+            response = adv_venue_profile_view(request)
+            self.adv_profile = AdvancedVenueProfile.objects.get(venue_profile=self.venue)
+            self.assertTrue(len(self.adv_profile.images.all())==1)
+        self.adv_profile.images.all().delete()
+
+    def test_delete_images(self):
+        image = ImageFile.new('RGBA', size=(100, 100), color=(155, 0, 0))
+        image_file = tempfile.NamedTemporaryFile(suffix='.png')
+        image.save(image_file, 'png')
+        # image_file.seek(0)
+
+        with open(image_file.name, 'rb') as image:
+            # Upload the image.
+            data = {
+                'upload_image': image, "address": "New York 1", "opening_hours": "updated!",
+                "description": "updated_desc", "contact": "updated contact",
+                "entry_fee": 17.23
+            }
+
+            request = self.request_factory.put('/adv_profile/', data, format='multipart')
+            request.user = self.user
+            response = adv_venue_profile_view(request)
+            self.adv_profile = AdvancedVenueProfile.objects.get(venue_profile=self.venue)
+            self.assertTrue(len(self.adv_profile.images.all()) == 1)
+
+            data = {
+                'delete_photos': [self.adv_profile.images.all()[0].id], "address": "New York 1", "opening_hours": "updated!",
+                "description": "updated_desc", "contact": "updated contact",
+                "entry_fee": 17.23
+            }
+
+            request = self.request_factory.put('/adv_profile/', data, format='multipart')
+            request.user = self.user
+            response = adv_venue_profile_view(request)
+            self.adv_profile = AdvancedVenueProfile.objects.get(venue_profile=self.venue)
+            self.assertTrue(len(self.adv_profile.images.all()) == 0)
