@@ -61,3 +61,8 @@ class LinkVenueToAccountSerializer(serializers.ModelSerializer):
         instance.govern_user = self.context['request'].user
         instance.save()
         return instance
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = get_user_model()
+        fields = ('email',)

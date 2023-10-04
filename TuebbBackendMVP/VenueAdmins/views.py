@@ -1,5 +1,5 @@
 from django.contrib.auth import get_user_model
-from .serializers import MenuItemSerializer, MenuSerializer, AdvancedProfileVenueSerializer
+from .serializers import MenuItemSerializer, MenuSerializer, AdvancedProfileVenueSerializer, ChangeTeamMemberSerializer
 from rest_framework import generics
 from rest_framework import permissions
 from rest_framework.decorators import api_view, permission_classes
@@ -77,7 +77,17 @@ def menu_view(request, pk=None, format=None):
     return Response({"supported methods":"PATCH,GET"}, status=status.HTTP_400_BAD_REQUEST)
 
 
-# settings view
+"""
+desc: change the profile of a venue and retrieve it
+requirements: auth credentials
+for change: use url without primary key parameter and use PUT
+input: {address:str, opening_hours:str, description:str, contact:str, entry_fee:float, delete_photos:id of image, upload_image: Image to upload}
+Note: Only one image can be uploaded at the time
+output: 202 if valid, 400 if not
+for retrieve: use primary key of object as url parameter or none if you want to get your own profile and use GET
+input: -
+output: 200 if valid, 400 if not, returns list of items on menu
+"""
 @api_view(['PUT', "GET"])
 @permission_classes([IsOwnerOrReadOnlyAdvUserProfile, permissions.IsAuthenticated])
 def adv_venue_profile_view(request, pk=None, format=None):
@@ -101,3 +111,27 @@ def adv_venue_profile_view(request, pk=None, format=None):
         adv_profile_serializer = AdvancedProfileVenueSerializer(adv_profile)
         return Response(adv_profile_serializer.data, status=status.HTTP_200_OK)
     return Response({"supported methods":"PUT,GET"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+"""
+desc: add and remove team members to a venue admin profile
+requirements: auth credentials
+use PATCH
+input: {remove_team_member:str (email of a user), add_team_member:str (email of a user)}
+Note: Only one remove and add per day
+output: 202 if valid, 400 if not, outputs all the current team members
+"""
+@api_view(['PATCH'])
+@permission_classes([IsOwnerOrReadOnlyAdvUserProfile, permissions.IsAuthenticated])
+def change_team_members_view(request, format=None):
+    if request.method == "PATCH":
+        if len(VenueProfile.objects.filter(govern_user=request.user)) == 0:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+        adv_profile = AdvancedVenueProfile.objects.get(venue_profile=VenueProfile.objects.get(govern_user=request.user))
+        change_team_member_seri = ChangeTeamMemberSerializer(adv_profile, data=request.data, context={'request': request})
+        if change_team_member_seri.is_valid():
+            change_team_member_seri.save()
+            return Response(change_team_member_seri.data, status.HTTP_202_ACCEPTED)
+        else:
+            return Response({"Error": "validation error"},status=status.HTTP_400_BAD_REQUEST)
+    return Response({"supported methods":"PATCH"}, status=status.HTTP_400_BAD_REQUEST)

@@ -2,12 +2,19 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase
 from rest_framework.test import APIRequestFactory
 from rest_framework import status
-from .views import menu_item_view, menu_view, adv_venue_profile_view
+from .views import menu_item_view, menu_view, adv_venue_profile_view, change_team_members_view
 from rest_framework.test import force_authenticate
 from .models import Menu, MenuItem, AdvancedVenueProfile
 from userAuth.models import VenueProfile
 import tempfile
 from PIL import Image as ImageFile
+
+"""
+Regarding the tests:
+I will add way more tests later. They don't cover everything yet.
+They also don't follow the DRY principle. I will change that too. 
+"""
+
 
 # Create your tests here.
 class MenuAndMenuItemTesting(TestCase):
@@ -282,3 +289,53 @@ class AdvancedVenueProfileTests(TestCase):
             response = adv_venue_profile_view(request)
             self.adv_profile = AdvancedVenueProfile.objects.get(venue_profile=self.venue)
             self.assertTrue(len(self.adv_profile.images.all()) == 0)
+
+
+class ChangeTeamMembersTests(TestCase):
+
+    def setUp(self):
+        self.request_factory = APIRequestFactory()
+        # venue owner
+        self.user = get_user_model().objects.create_user(
+            email='javed@javed.com', password='my_secret')
+        # team member
+        self.user1 = get_user_model().objects.create_user(
+            email='bert@bert.com', password='my_secret')
+        # 3rd party user
+        self.user2 = get_user_model().objects.create_user(
+            email='anna@anna.com', password='my_secret')
+        self.venue = VenueProfile.objects.create(company_name="ExampleVenue", unique_code="12345",
+                                                 govern_user=self.user)
+        self.adv_profile = AdvancedVenueProfile.objects.create(venue_profile=self.venue, address="New York 2",
+                                                               opening_hours="Fri - Mon; 8pm - 6 am",
+                                                               description="Best night club in city",
+                                                               contact="examplevenue@gmail.com",
+                                                               entry_fee=15.2)
+
+    def test_adding_user(self):
+
+        data = {
+            "add_team_member": "bert@bert.com"
+        }
+
+        request = self.request_factory.patch(f'/change_team_members/', data, format='json')
+        request.user = self.user
+        response = change_team_members_view(request)
+        self.assertTrue(len(response.data.get("team"))==1)
+
+    def test_removing_user(self):
+        data = {
+            "add_team_member": "bert@bert.com"
+        }
+
+        request = self.request_factory.patch(f'/change_team_members/', data, format='json')
+        request.user = self.user
+        response = change_team_members_view(request)
+
+        data = {
+            "remove_team_member": "bert@bert.com"
+        }
+        request = self.request_factory.patch(f'/change_team_members/', data, format='json')
+        request.user = self.user
+        response = change_team_members_view(request)
+        self.assertTrue(len(response.data.get("team")) == 0)

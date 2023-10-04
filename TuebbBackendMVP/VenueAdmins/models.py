@@ -1,5 +1,5 @@
 from django.db import models
-from userAuth.models import VenueProfile
+from userAuth.models import VenueProfile, CustomUser
 import os
 from django.dispatch import receiver
 
@@ -47,5 +47,6 @@ class AdvancedVenueProfile(models.Model):
     contact = models.CharField(max_length=200, blank=True, null=True)
     images = models.ManyToManyField(Photo, related_name="venue", blank=True)
     entry_fee = models.FloatField(blank=True, null=True)
+    team = models.ManyToManyField(CustomUser, related_name="venue", blank=True)
     def __str__(self):
         return f"Company profile of {self.venue_profile.company_name}"

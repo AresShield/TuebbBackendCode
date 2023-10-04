@@ -1,7 +1,8 @@
 from rest_framework import serializers
 from .models import Menu, MenuItem, AdvancedVenueProfile, Photo
 from userAuth.models import VenueProfile
-
+from userAuth.serializers import UserSerializer
+from django.contrib.auth import get_user_model
 
 # serializer for menu items
 class MenuItemSerializer(serializers.ModelSerializer):
@@ -68,12 +69,6 @@ class AdvancedProfileVenueSerializer(serializers.ModelSerializer):
             for photo in self.context["request"].data.get("delete_photos"):
                 if Photo.objects.get(pk=int(photo)) not in instance.images.all():
                     raise serializers.ValidationError({"delete_photos": "No permission to do this!"})
-        """ if self.context["request"].data.get("upload_images"):
-             for file in self.context["request"].data.get("upload_images"):
-                 print(file)
-                 #if file.split(".")[-1] not in ["jpg", "png", "jpeg", "JPG", "PNG", "JPEG"]:
-                     #raise serializers.ValidationError({"Uploaded photos": "File type not supported!"})
-         """
         return attrs
 
 
@@ -96,3 +91,36 @@ class AdvancedProfileVenueSerializer(serializers.ModelSerializer):
 
         instance.save()
         return instance
+
+
+# serializer to add and remove team members to an admin profile
+class ChangeTeamMemberSerializer(serializers.ModelSerializer):
+
+    team = UserSerializer(many=True, read_only=True)
+    class Meta:
+        model = AdvancedVenueProfile
+        fields = ["id", "team"]
+
+    def validate(self, attrs):
+        data = self.context["request"].data
+        if data.get("remove_team_member"):
+            if len(get_user_model().objects.filter(email=data.get("remove_team_member")))==0 or get_user_model().objects.get(email=data.get("remove_team_member")) not in self.instance.team.all():
+                raise serializers.ValidationError({"remove_team_member": "Invalid team member"})
+        if data.get("add_team_member"):
+            if len(get_user_model().objects.filter(email=data.get("add_team_member")))==0 or get_user_model().objects.get(email=data.get("add_team_member")) in self.instance.team.all():
+                raise serializers.ValidationError({"add_team_member": "Invalid user!"})
+            user = get_user_model().objects.get(email=data.get("add_team_member"))
+        return attrs
+
+    def update(self, instance, validated_data):
+        data = self.context["request"].data
+        if data.get("remove_team_member"):
+            user = get_user_model().objects.get(email=data.get("remove_team_member"))
+            instance.team.remove(user)
+        if data.get("add_team_member"):
+            user = get_user_model().objects.get(email=data.get("add_team_member"))
+            instance.team.add(user)
+        instance.save()
+        return {
+            "team": instance.team.all()
+        }
