@@ -40,7 +40,8 @@ INSTALLED_APPS = [
     "userAuth",
     "rest_framework",
     "VenueAdmins",
-    "CheckInProcess"
+    "CheckInProcess",
+    "ConsumerPart"
 ]
 
 MIDDLEWARE = [
