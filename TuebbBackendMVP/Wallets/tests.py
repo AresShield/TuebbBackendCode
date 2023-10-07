@@ -2,7 +2,7 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase
 from rest_framework.test import APIRequestFactory
 from rest_framework import status
-from .views import get_balance_view, load_up_money_view
+from .views import get_balance_view, load_up_money_view, pay_out_money_view
 from rest_framework.test import force_authenticate
 from ConsumerPart.models import ConsumerUser
 from userAuth.models import VenueProfile
@@ -40,6 +40,7 @@ class WalletTesting(TestCase):
         self.assertTrue(self.venue.wallet.all()[0].balance==0)
 
 
+    # development only methods!
     def test_load_up_method(self):
         request = self.request_factory.post('load-up/', format='json')
         request.user = self.user1
@@ -47,3 +48,11 @@ class WalletTesting(TestCase):
         response = view(request)
         self.assertTrue(response.status_code == status.HTTP_200_OK)
         self.assertTrue(self.consumer.wallet.all()[0].balance == 50)
+
+    def test_pay_out_method(self):
+        request = self.request_factory.post('pay_out/', format='json')
+        request.user = self.user
+        view = pay_out_money_view
+        response = view(request)
+        self.assertTrue(response.status_code == status.HTTP_200_OK)
+        self.assertTrue(self.venue.wallet.all()[0].balance == -50)

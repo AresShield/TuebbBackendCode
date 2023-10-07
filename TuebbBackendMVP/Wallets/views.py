@@ -38,3 +38,12 @@ def load_up_money_view(request, format=None):
     wallet.balance += 50.0
     wallet.save()
     return Response({"Balance": wallet.balance}, status=status.HTTP_200_OK)
+
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated])
+def pay_out_money_view(request, format=None):
+    profile = request.user.venue_profile.all()[0]
+    wallet = profile.wallet.all()[0]
+    wallet.balance -= 50.0
+    wallet.save()
+    return Response({"Balance": wallet.balance}, status=status.HTTP_200_OK)

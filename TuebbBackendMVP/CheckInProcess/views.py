@@ -8,6 +8,7 @@ from .permissions import TicketPermissions, TicketReadPermissions, TicketBuyPerm
 from rest_framework import generics
 from .models import Ticket
 from .payment_handling import check_if_enough_funds, buy_ticket
+from .dashboard import get_dashboard_data
 
 # Create your views here.
 @api_view(['POST'])
@@ -41,3 +42,11 @@ def buy_ticket_view(request, pk=None,format=None):
         ticket_seri = TicketSerializer(ticket)
         return Response(ticket_seri.data, status=status.HTTP_200_OK)
     return Response({"Error":"No ticket specified"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['POST'])
+@permission_classes([permissions.IsAuthenticated])
+def get_check_in_data_view(request, format=None):
+    venue = request.user.venue_profile.all()[0].advanced_profile.all()[0]
+    data = get_dashboard_data(venue, request.data)
+    return Response(data, status=status.HTTP_200_OK)

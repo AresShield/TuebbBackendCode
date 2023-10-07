@@ -10,6 +10,7 @@ class Ticket(models.Model):
     price = models.FloatField()
     paid = models.BooleanField(default=False)
     owner = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, related_name="tickets", blank=True, null=True)
+    created = models.DateTimeField(auto_now_add=True)
 
 
     def __str__(self):

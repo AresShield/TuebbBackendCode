@@ -2,7 +2,7 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase
 from rest_framework.test import APIRequestFactory
 from rest_framework import status
-from .views import ticket_creation_view, TicketInfoView, buy_ticket_view
+from .views import ticket_creation_view, TicketInfoView, buy_ticket_view, get_check_in_data_view
 from rest_framework.test import force_authenticate
 from .models import Ticket
 from userAuth.models import VenueProfile
@@ -10,6 +10,7 @@ import tempfile
 from PIL import Image as ImageFile
 from VenueAdmins.models import AdvancedVenueProfile
 from ConsumerPart.models import ConsumerUser
+import datetime
 
 # Create your tests here.
 class TicketTests(TestCase):
@@ -96,6 +97,49 @@ class TicketBuyTests(TestCase):
         request.user = self.user2
         view = buy_ticket_view
         response = view(request, pk=self.ticket.id)
-        print(response.data)
+        #print(response.data)
         self.assertTrue(response.data.get("paid")==True)
         #self.assertTrue(response.data.get("Error")=="Not enough funds")
+
+
+class DashBoardTestCheckIn(TestCase):
+    def setUp(self):
+        self.request_factory = APIRequestFactory()
+        self.user = get_user_model().objects.create_user(
+            email='javed@javed.com', password='my_secret')
+        self.user1 = get_user_model().objects.create_user(
+            email='bert@bert.com', password='my_secret')
+        self.user2 = get_user_model().objects.create_user(
+            email='anna@anna.com', password='my_secret')
+        self.venue = VenueProfile.objects.create(company_name="ExampleVenue", unique_code="12345", govern_user=self.user)
+        self.adv_profile1 = AdvancedVenueProfile.objects.create(venue_profile=self.venue, entry_fee=15)
+        self.adv_profile1.team.add(self.user1)
+        self.adv_profile1.save()
+        self.consumer = ConsumerUser.objects.create(user=self.user2, age=40, gender="Male")
+        self.ticket = Ticket.objects.create(creator=self.adv_profile1, price=15.0, paid=False, owner=self.user2)
+        Ticket.objects.create(creator=self.adv_profile1, price=15.0, paid=True, owner=self.user2)
+        Ticket.objects.create(creator=self.adv_profile1, price=15.0, paid=True, owner=self.user2)
+        Ticket.objects.create(creator=self.adv_profile1, price=15.0, paid=True, owner=self.user2)
+        Ticket.objects.create(creator=self.adv_profile1, price=15.0, paid=True, owner=self.user2)
+        Ticket.objects.create(creator=self.adv_profile1, price=15.0, paid=True, owner=self.user2)
+        Ticket.objects.create(creator=self.adv_profile1, price=15.0, paid=True, owner=self.user2)
+        Ticket.objects.create(creator=self.adv_profile1, price=15.0, paid=True, owner=self.user2)
+        Ticket.objects.create(creator=self.adv_profile1, price=15.0, paid=True, owner=self.user2)
+        Ticket.objects.create(creator=self.adv_profile1, price=15.0, paid=True, owner=self.user2)
+
+    def test_get_dashboard_data(self):
+        format_string = "%d.%m.%Y %H:%M"
+
+        obj = {
+            "start": (datetime.datetime.now()-datetime.timedelta(hours=1)).strftime(format_string),
+            "end": (datetime.datetime.now()+datetime.timedelta(hours=1)).strftime(format_string),
+        }
+        request = self.request_factory.post(f'/get_ticket_data/', obj, format='json')
+        request.user = self.user
+        view = get_check_in_data_view
+        response = view(request)
+        print(response.data)
+        self.assertTrue(response.status_code==status.HTTP_200_OK)
+        self.assertTrue(response.data.get("total_sold") == 9)
+        self.assertTrue(response.data.get("avg_age") == 40)
+
