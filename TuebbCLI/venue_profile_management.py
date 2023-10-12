@@ -54,5 +54,5 @@ adv_profile = AdvancedVenueProfile()
 adv_profile.get_profile()"""
 #adv_profile.add_picture()
 #adv_profile.get_profile()
-adv_profile.delete_picture([3,])
+#adv_profile.delete_picture([3,])
 print(adv_profile.get_profile())

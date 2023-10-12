@@ -1,0 +1,44 @@
+API Documentation of the Venue Owner Features
+
+User account (CustomUser)
+We have a base user account (objects of CustomUser model). Venue Owners, Team members and end-consumers will all have a Base Account that is linked to a advanced profile.
+
+
+# get venue profile
+Link: venue_admin/adv_profile/
+Description: Returns the important values of the venue
+Method: GET
+Auth requirements: Required
+Input: -
+Output: {id:int, address:str, opening_hours:str, description:str, contact:str, images:list of dicts {id:int, file:str (<- url of image)}, entry_fee:float, team:dict with {id:int, team: list of dicts with {email:str}}
+if successful:
+HTTP Status 200
+else: HTTP Status 400
+
+
+# change the venue profile
+Link: venue_admin/adv_profile/
+Description: Changes the venue profile
+Method: PUT
+Auth requirements: Required
+Input:
+Required {address:str, opening_hours:str, description:str, contact:str, entry_fee:float}
+Optional {upload_image:image, delete_photos:list of ints (ids of the image)}
+Output: same as get venue profile above
+if successful:
+HTTP Status 200
+else: HTTP Status 400
+
+
+# remove and add team mebers
+Link: venue_admin/change_team_members/
+Description: Allows to remove and/or add a team member (1 at a time for each)
+Method: PATCH
+Auth requirements: Required
+Input:
+Optional {add_team_member:str (<- email of the user profile), remove_team_member:str(<- email of the user profile)}
+Output: -
+if successful:
+HTTP Status 202
+else: HTTP Status 400
+

@@ -2,6 +2,7 @@ from django.db import models
 from userAuth.models import VenueProfile, CustomUser
 import os
 from django.dispatch import receiver
+from django.db.models.signals import post_save
 
 
 # represent items on the menu
@@ -50,3 +51,8 @@ class AdvancedVenueProfile(models.Model):
     team = models.ManyToManyField(CustomUser, related_name="venue", blank=True)
     def __str__(self):
         return f"Company profile of {self.venue_profile.company_name}"
+
+@receiver(post_save, sender=VenueProfile)
+def create_dependecies(sender, instance, created, **kwargs):
+    if created:
+        AdvancedVenueProfile.objects.create(venue_profile=instance)

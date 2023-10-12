@@ -109,7 +109,11 @@ def adv_venue_profile_view(request, pk=None, format=None):
         else:
             return Response({"Error": "No Venue found with your criteria"},status=status.HTTP_400_BAD_REQUEST)
         adv_profile_serializer = AdvancedProfileVenueSerializer(adv_profile)
-        return Response(adv_profile_serializer.data, status=status.HTTP_200_OK)
+        data = adv_profile_serializer.data
+        if pk==None:
+            team_members = ChangeTeamMemberSerializer(adv_profile)
+            data["team"] = team_members.data
+        return Response(data, status=status.HTTP_200_OK)
     return Response({"supported methods":"PUT,GET"}, status=status.HTTP_400_BAD_REQUEST)
 
 

@@ -31,8 +31,6 @@ class MenuAndMenuItemTesting(TestCase):
                                                  govern_user=self.user2)
         self.menu = Menu.objects.create(owner=self.venue)
         self.menu1 = Menu.objects.create(owner=self.venue1)
-        self.adv_profile1 = AdvancedVenueProfile.objects.create(venue_profile=self.venue)
-        self.adv_profile2 = AdvancedVenueProfile.objects.create(venue_profile=self.venue1)
 
     def test_adding_item(self):
         request = self.request_factory.post('/menu_item/', {"name": "TestDrink", "description":"15% alk, don't overdo it bro", "price": "15.432"}, format='json')
@@ -197,10 +195,13 @@ class AdvancedVenueProfileTests(TestCase):
         self.venue = VenueProfile.objects.create(company_name="ExampleVenue", unique_code="12345", govern_user=self.user)
         self.venue1 = VenueProfile.objects.create(company_name="ExampleVenue", unique_code="123456",
                                                  govern_user=self.user2)
-        self.adv_profile = AdvancedVenueProfile.objects.create(venue_profile=self.venue, address="New York 2", opening_hours="Fri - Mon; 8pm - 6 am",
-                                                               description="Best night club in city", contact="examplevenue@gmail.com",
-                                                               entry_fee=15.2)
-        self.adv_profile1 = AdvancedVenueProfile.objects.create(venue_profile=self.venue1)
+        self.adv_profile = self.venue.advanced_profile.all()[0]
+        self.adv_profile.address = "New York 2"
+        self.adv_profile.opening_hours = "Fri - Mon; 8pm - 6 am"
+        self.adv_profile.description = "Best night club in city"
+        self.adv_profile.contact = "examplevenue@gmail.com"
+        self.adv_profile.entry_fee = 15.2
+        self.adv_profile.save()
 
     def test_retrieving_info_from_others(self):
         request = self.request_factory.get(f'/adv_profile/{self.adv_profile.id}', format='json')
@@ -306,11 +307,13 @@ class ChangeTeamMembersTests(TestCase):
             email='anna@anna.com', password='my_secret')
         self.venue = VenueProfile.objects.create(company_name="ExampleVenue", unique_code="12345",
                                                  govern_user=self.user)
-        self.adv_profile = AdvancedVenueProfile.objects.create(venue_profile=self.venue, address="New York 2",
-                                                               opening_hours="Fri - Mon; 8pm - 6 am",
-                                                               description="Best night club in city",
-                                                               contact="examplevenue@gmail.com",
-                                                               entry_fee=15.2)
+        self.adv_profile = self.venue.advanced_profile.all()[0]
+        self.adv_profile.address = "New York 2"
+        self.adv_profile.opening_hours = "Fri - Mon; 8pm - 6 am"
+        self.adv_profile.description = "Best night club in city"
+        self.adv_profile.contact = "examplevenue@gmail.com"
+        self.adv_profile.entry_fee = 15.2
+        self.adv_profile.save()
 
     def test_adding_user(self):
 
@@ -339,3 +342,4 @@ class ChangeTeamMembersTests(TestCase):
         request.user = self.user
         response = change_team_members_view(request)
         self.assertTrue(len(response.data.get("team")) == 0)
+

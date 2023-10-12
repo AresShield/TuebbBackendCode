@@ -6,6 +6,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework import status
 from .models import VenueProfile
+from .permissions import IsNotLinkedYet
 
 
 """
@@ -25,8 +26,9 @@ input: Unique_code as a str (JSON)
 output: 202 if successful, 400 otherwise
 """
 @api_view(['POST'])
-@permission_classes([permissions.IsAuthenticated])
+@permission_classes([IsNotLinkedYet, permissions.IsAuthenticated])
 def link_account_to_venue(request, format=None):
+    # Link a user account to a profile
     if request.method == 'POST':
         venue = VenueProfile.objects.get(unique_code=request.data["unique_code"])
         venue_serializer = LinkVenueToAccountSerializer(venue, data=request.data, context={'request': request})

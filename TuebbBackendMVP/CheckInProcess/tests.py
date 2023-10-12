@@ -23,7 +23,8 @@ class TicketTests(TestCase):
         self.user2 = get_user_model().objects.create_user(
             email='anna@anna.com', password='my_secret')
         self.venue = VenueProfile.objects.create(company_name="ExampleVenue", unique_code="12345", govern_user=self.user)
-        self.adv_profile1 = AdvancedVenueProfile.objects.create(venue_profile=self.venue, entry_fee=15)
+        self.adv_profile1 = self.venue.advanced_profile.all()[0]
+        self.adv_profile1.entry_fee = 15
         self.adv_profile1.team.add(self.user1)
         self.adv_profile1.save()
 
@@ -75,7 +76,8 @@ class TicketBuyTests(TestCase):
         self.user2 = get_user_model().objects.create_user(
             email='anna@anna.com', password='my_secret')
         self.venue = VenueProfile.objects.create(company_name="ExampleVenue", unique_code="12345", govern_user=self.user)
-        self.adv_profile1 = AdvancedVenueProfile.objects.create(venue_profile=self.venue, entry_fee=15)
+        self.adv_profile1 = self.venue.advanced_profile.all()[0]
+        self.adv_profile1.entry_fee = 15
         self.adv_profile1.team.add(self.user1)
         self.adv_profile1.save()
         self.consumer = ConsumerUser.objects.create(user=self.user2)
@@ -112,7 +114,8 @@ class DashBoardTestCheckIn(TestCase):
         self.user2 = get_user_model().objects.create_user(
             email='anna@anna.com', password='my_secret')
         self.venue = VenueProfile.objects.create(company_name="ExampleVenue", unique_code="12345", govern_user=self.user)
-        self.adv_profile1 = AdvancedVenueProfile.objects.create(venue_profile=self.venue, entry_fee=15)
+        self.adv_profile1 = self.venue.advanced_profile.all()[0]
+        self.adv_profile1.entry_fee = 15
         self.adv_profile1.team.add(self.user1)
         self.adv_profile1.save()
         self.consumer = ConsumerUser.objects.create(user=self.user2, age=40, gender="Male")

@@ -87,6 +87,16 @@ class AdminAccountTests(TestCase):
         self.venue = VenueProfile.objects.get(unique_code="12345")
         self.assertEqual(self.user, self.venue.govern_user)
 
+    def test_link_if_already_linked(self):
+
+        request = self.request_factory.post('/link_venue_profile/', {'unique_code': '12345'}, format='json')
+        request.user = self.user
+        response = link_account_to_venue(request)
+
+        request = self.request_factory.post('/link_venue_profile/', {'unique_code': '13323123213213'}, format='json')
+        request.user = self.user
+        response = link_account_to_venue(request)
+        self.assertTrue(response.status_code == status.HTTP_403_FORBIDDEN)
     def test_use_unique_code_twice(self):
         request = self.request_factory.post('/link_venue_profile/', {'unique_code': '12345'}, format='json')
         request.user = self.user

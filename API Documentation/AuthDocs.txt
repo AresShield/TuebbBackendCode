@@ -1,0 +1,40 @@
+API Documentation of the auth process
+
+User account (CustomUser)
+We have a base user account (objects of CustomUser model). Venue Owners, Team members and end-consumers will all have a Base Account that is linked to a advanced profile.
+
+
+# account creation
+Link: auth/register/
+Description: Creates a new user account
+Input: {email:str, first_name:str, last_name:str, password:str, password2:str}
+Method: POST
+Auth requirements: None
+Output:
+if successful:
+HTTP Status 201
+else: HTTP Status 400
+
+
+# login process
+Link: auth/login/
+Description: Logs a user in / Currently it just serves as a confirmation that user credentials are correct
+Input: {email:str, password:str}
+Method: POST
+Auth requirements: Required
+Output:
+if successful:
+HTTP Status 200
+else: HTTP Status 403
+
+
+# link a venue account to a user account
+Link: auth/link-venue-profile/
+Description: Connects the user account with a venue profile (admin account) via an unique code that we generate in advance
+Method: POST
+Auth requirements: Required
+Input: {unique_code:str}
+Output:
+if successful:
+HTTP Status 202
+else: HTTP Status 403 or 400
