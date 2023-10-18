@@ -24,3 +24,13 @@ HTTP Status 200
 else: HTTP Status 400
 
 
+# buy a ticket
+Link: check-in/buy-ticket/<int:pk>
+Description: buys a ticket
+Method: PATCH
+Auth requirements: Required
+Input: - (except for primary key of ticket as url param)
+Output: {id:int, company_name:str, price:float, paid:bool}
+if successful:
+HTTP Status 200
+else: HTTP Status 400

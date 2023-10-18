@@ -1,0 +1,36 @@
+API Documentation of the Consumer Profile
+
+# create a consumer user profile
+Link: consumer/consumer-account-creation/
+Description: Creates a consumer profile for a user
+Method: POST
+Auth requirements: Required
+Input: -
+Output: -
+if successful:
+HTTP Status 201
+else: HTTP Status 400
+
+
+# retrieve consumer user profile data
+Link: consumer/consumer-account-updates/
+Description: retrieves the consumer profile
+Method: GET
+Auth requirements: Required
+Input: -
+Output: {age:int, gender:str}
+if successful:
+HTTP Status 200
+else: HTTP Status 400
+
+
+# update a consumer user profile
+Link: consumer/consumer-account-updates/
+Description: updates a consumer user profile
+Method: PUT, PATCH
+Auth requirements: Required
+Input: optional {age:int, gender:str}
+Output: {age:int, gender:str}
+if successful:
+HTTP Status 200
+else: HTTP Status 400

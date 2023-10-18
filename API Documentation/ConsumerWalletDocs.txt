@@ -1,0 +1,16 @@
+API Documentation of the Consumer Wallet Features
+
+We have a base wallet class. Consumer Wallets and Venue Wallets inherit the main functionalities from them.
+Differences: Consumer Wallets can only load up their accounts (pay in) and Venue Wallets can only pay out money.
+
+
+# get the current balance
+Link: wallets/get-wallet-balance/
+Description: returns balance of the users' wallet
+Method: GET
+Auth requirements: Required
+Input: -
+Output: {balance:float}
+if successful:
+HTTP Status 200
+else: HTTP Status 400
