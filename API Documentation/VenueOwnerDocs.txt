@@ -42,3 +42,15 @@ if successful:
 HTTP Status 202
 else: HTTP Status 400
 
+
+# user/team member can check if he is a team member already
+Link: venue_admin/is-team-member/
+Description: -
+Method: GET
+Auth requirements: Required
+Input: -
+Output: {"result"}
+if successful:
+HTTP Status 200 and "YES" as result
+else:  "NO" as result
+or STATUS 400

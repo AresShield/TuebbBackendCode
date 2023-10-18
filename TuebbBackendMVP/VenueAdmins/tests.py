@@ -2,7 +2,7 @@ from django.contrib.auth import get_user_model
 from django.test import TestCase
 from rest_framework.test import APIRequestFactory
 from rest_framework import status
-from .views import menu_item_view, menu_view, adv_venue_profile_view, change_team_members_view
+from .views import menu_item_view, menu_view, adv_venue_profile_view, change_team_members_view, is_team_member_view
 from rest_framework.test import force_authenticate
 from .models import Menu, MenuItem, AdvancedVenueProfile
 from userAuth.models import VenueProfile
@@ -343,3 +343,17 @@ class ChangeTeamMembersTests(TestCase):
         response = change_team_members_view(request)
         self.assertTrue(len(response.data.get("team")) == 0)
 
+
+    def test_is_team_member_yes(self):
+        self.adv_profile.team.add(self.user2)
+        self.adv_profile.save()
+        request = self.request_factory.get(f'/is-team-member/', format='json')
+        request.user = self.user2
+        response = is_team_member_view(request)
+        self.assertTrue(response.data.get("result")=="YES")
+
+    def test_is_team_member_no(self):
+        request = self.request_factory.get(f'/is-team-member/', format='json')
+        request.user = self.user1
+        response = is_team_member_view(request)
+        self.assertTrue(response.data.get("result") == "NO")

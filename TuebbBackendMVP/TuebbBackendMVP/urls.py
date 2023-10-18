@@ -25,7 +25,7 @@ urlpatterns = [
     path("auth/", include("userAuth.urls")),
     path("venue_admin/", include("VenueAdmins.urls")),
     path("check-in/", include("CheckInProcess.urls")),
-    path("check-in/", include("Wallets.urls")),
+    path("wallets/", include("Wallets.urls")),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 urlpatterns += [

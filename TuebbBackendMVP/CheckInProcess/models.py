@@ -15,6 +15,6 @@ class Ticket(models.Model):
 
     def __str__(self):
         if self.owner:
-            return f"Ticket of {self.owner.email} for {self.creator.company_name}"
+            return f"Paid {self.owner.email} | {self.pk} | {self.creator.venue_profile.company_name}"
         else:
-            return f"Unpaid ticket for {self.creator.company_name}"
+            return f"Unpaid | {self.pk} | {self.creator.venue_profile.company_name}"

@@ -1,0 +1,26 @@
+API Documentation of the Check In/Ticket Purchasing
+
+# create a ticket
+Link: check-in/ticket-creation/
+Description: Creates an unpaid ticket
+Method: POST
+Auth requirements: Required
+Input: -
+Output: {id:int}
+if successful:
+HTTP Status 201
+else: HTTP Status 400
+
+
+# get ticket info
+Link: check-in/get-ticket-info/<int:pk>
+Description: returns important ticket information
+Method: GET
+Auth requirements: Required
+Input: - (except for primary key of ticket as url param)
+Output: {id:int, company_name:str, price:float, paid:bool}
+if successful:
+HTTP Status 200
+else: HTTP Status 400
+
+

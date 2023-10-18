@@ -42,7 +42,7 @@ INSTALLED_APPS = [
     "VenueAdmins",
     "CheckInProcess",
     "ConsumerPart",
-    "Wallets"
+    "Wallets",
 ]
 
 MIDDLEWARE = [

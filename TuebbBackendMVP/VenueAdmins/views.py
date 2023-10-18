@@ -139,3 +139,20 @@ def change_team_members_view(request, format=None):
         else:
             return Response({"Error": "validation error"},status=status.HTTP_400_BAD_REQUEST)
     return Response({"supported methods":"PATCH"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+"""
+desc: checks if a user is a team member
+requirements: auth credentials
+use GET
+input: -
+output: {"result"} -> "YES" or "NO"
+"""
+@api_view(['GET'])
+@permission_classes([IsOwnerOrReadOnlyAdvUserProfile, permissions.IsAuthenticated])
+def is_team_member_view(request, format=None):
+    if len(request.user.venue.all()) > 0:
+        return Response({"result": "YES"}, status.HTTP_200_OK)
+    else:
+        return Response({"result": "NO"}, status.HTTP_200_OK)
+    return Response(status=status.HTTP_400_BAD_REQUEST)
